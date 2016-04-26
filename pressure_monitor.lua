@@ -31,8 +31,8 @@ end
 
 clear()
 if fs.exists(DATA_PATH) then
-	data_file = fs.open(DATA_PATH)
-	data_obj = textutils.unserialize(data_file.readLine())
+	data_file = fs.open(DATA_PATH, "r")
+	data_obj = textutils.unserialize(data_file.readAll())
 	PRESSURE = data_obj.pressure
 	COMPRESSOR_SIDE = data_obj.compressor_side
 	COMPRESSOR_DISTANCE = data_obj.compressor_distance
@@ -60,7 +60,7 @@ else
 	term.write("guage side: ")
 	GAUGE_SIDE = read()
 	clear()
-	term.write("guage distance")
+	term.write("guage distance: ")
 	GAUGE_DISTANCE = tonumber(read())
 	clear()
 	term.write("pressure: ")
@@ -70,12 +70,12 @@ else
 	save_data()
 end
 
-function get_gauge_strength()
-	return (15 - (PRESSURE * 2)) + GAUGE_DISTANCE
+function get_duct_strength()
+	return (15 - (PRESSURE * 2)) + (DUCT_DISTANCE - 1) -- min 1 distance
 end
 
 function get_current_pressure()
-	redstone_level = redstone.getAnalogInput(GAUGE_SIDE) + distance
+	redstone_level = redstone.getAnalogInput(GAUGE_SIDE) + (GAUGE_DISTANCE - 1) -- min 1 distance
 	return (redstone_level / 2)
 end
 
@@ -100,8 +100,8 @@ end
 function display_information()
 	while true do
 		clear_information()
-		print("set pressure: " + tonumber(PRESSURE))
-		print("current pressure: " + tonumber(get_current_pressure()))
+		print("set pressure: " .. tostring(PRESSURE))
+		print("current pressure: " .. tostring(get_current_pressure()))
 		if get_current_pressure() < PRESSURE - 0.5 then
 			redstone.setOutput(COMPRESSOR_SIDE, true)
 		else
@@ -139,10 +139,14 @@ function get_input()
 		elseif input == "reset" then
 			fs.delete(DATA_PATH)
 			os.shutdown()
+		else
+			print("unknown command")
+			sleep(1)
+		end
 	end
 end
 
-redstone.setAnalogOutput(GAUGE_SIDE, get_gauge_strength())
+redstone.setAnalogOutput(DUCT_SIDE, get_duct_strength())
 
 parallel.waitForAny(display_information(), get_input())
 
