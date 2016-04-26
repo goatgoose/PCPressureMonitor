@@ -42,7 +42,7 @@ if fs.exists(DATA_PATH) then
 	GAUGE_DISTANCE = data_obj.gauge_distance
 
 	term.write("succesfully loaded previous settings... starting...")
-	sleep(2)
+	sleep(1)
 	clear()
 else
 	term.write("compressor side: ")
@@ -84,15 +84,17 @@ function clear_information()
 	for i = 1, (h / 2) - 1 do
 		term.setCursorPos(1,i)
 		term.clearLine()
+		print("clear_information")
 	end
 	term.setCursorPos(1,1)
 end
 
 function clear_get_input()
 	w, h = term.getSize()
-	for i = 1, h / 2 do
+	for i = h / 2, h do
 		term.setCursorPos(1,i)
 		term.clearLine()
+		print("clear_get_input")
 	end
 	term.setCursorPos(1,h/2)
 end
@@ -114,27 +116,29 @@ end
 function get_input()
 	while true do
 		clear_get_input()
+		print("enter command: ")
+		term.setCursorBlink(true)
 		input = read()
 		if 	   input == "set pressure" then
-			PRESSURE = tonumber(input)
+			PRESSURE = tonumber(read())
 			save_data()
 		elseif input == "set compressor side" then
-			COMPRESSOR_SIDE = input
+			COMPRESSOR_SIDE = read()
 			save_data()
 		elseif input == "set compressor distance" then
-			COMPRESSOR_DISTANCE = tonumber(input)
+			COMPRESSOR_DISTANCE = tonumber(read())
 			save_data()
 		elseif input == "set duct side" then
-			DUCT_SIDE = input
+			DUCT_SIDE = read()
 			save_data()
 		elseif input == "set duct distance" then
-			DUCT_DISTANCE = tonumber(input)
+			DUCT_DISTANCE = tonumber(read())
 			save_data()
 		elseif input == "set gauge side" then
-			GAUGE_SIDE = input
+			GAUGE_SIDE = read()
 			save_data()
 		elseif input == "set gauge distance" then
-			GAUGE_DISTANCE = tonumber(input)
+			GAUGE_DISTANCE = tonumber(read())
 			save_data()
 		elseif input == "reset" then
 			fs.delete(DATA_PATH)
@@ -143,6 +147,7 @@ function get_input()
 			print("unknown command")
 			sleep(1)
 		end
+		clear_get_input()
 	end
 end
 
