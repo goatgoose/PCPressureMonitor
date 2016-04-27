@@ -2,26 +2,32 @@ DATA_PATH = "/data/pmdata"
 
 PRESSURE = nil
 COMPRESSOR_SIDE = nil
-COMPRESSOR_DISTANCE = nil
 DUCT_SIDE = nil
 DUCT_DISTANCE = nil
 GAUGE_SIDE = nil
 GAUGE_DISTANCE = nil
+MONITOR_SIDE = nil
 
 function clear()
 	term.clear()
 	term.setCursorPos(1,1)
 end
 
+function clear_monitor()
+	monitor = peripheral.wrap(MONITOR_SIDE)
+	monitor.clear()
+	monitor.setCursorPos(1,1)
+end
+
 function save_data()
 	data_obj = {
 		pressure = PRESSURE,
 		compressor_side = COMPRESSOR_SIDE,
-		compressor_distance = COMPRESSOR_DISTANCE,
 		duct_side = DUCT_SIDE,
 		duct_distance = DUCT_DISTANCE,
 		gauge_side = GAUGE_SIDE,
-		gauge_distance = GAUGE_DISTANCE
+		gauge_distance = GAUGE_DISTANCE,
+		monitor_side = MONITOR_SIDE
 	}
 	fs.delete(DATA_PATH)
 	data_file = fs.open(DATA_PATH, "w")
@@ -35,11 +41,11 @@ if fs.exists(DATA_PATH) then
 	data_obj = textutils.unserialize(data_file.readAll())
 	PRESSURE = data_obj.pressure
 	COMPRESSOR_SIDE = data_obj.compressor_side
-	COMPRESSOR_DISTANCE = data_obj.compressor_distance
 	DUCT_SIDE = data_obj.duct_side
 	DUCT_DISTANCE = data_obj.duct_distance
 	GAUGE_SIDE = data_obj.gauge_side
 	GAUGE_DISTANCE = data_obj.gauge_distance
+	MONITOR_SIDE = data_obj.monitor_side
 
 	term.write("succesfully loaded previous settings... starting...")
 	sleep(1)
@@ -47,9 +53,6 @@ if fs.exists(DATA_PATH) then
 else
 	term.write("compressor side: ")
 	COMPRESSOR_SIDE = read()
-	clear()
-	term.write("compressor distance: ")
-	COMPRESSOR_DISTANCE = tonumber(read())
 	clear()
 	term.write("duct side: ")
 	DUCT_SIDE = read()
@@ -62,6 +65,9 @@ else
 	clear()
 	term.write("guage distance: ")
 	GAUGE_DISTANCE = tonumber(read())
+	clear()
+	term.write("monitor side: ")
+	MONITOR_SIDE = read()
 	clear()
 	term.write("pressure: ")
 	PRESSURE = tonumber(read())
@@ -79,31 +85,15 @@ function get_current_pressure()
 	return (redstone_level / 2)
 end
 
-function clear_information()
-	w, h = term.getSize()
-	for i = 1, (h / 2) - 1 do
-		term.setCursorPos(1,i)
-		term.clearLine()
-		print("clear_information")
-	end
-	term.setCursorPos(1,1)
-end
-
-function clear_get_input()
-	w, h = term.getSize()
-	for i = h / 2, h do
-		term.setCursorPos(1,i)
-		term.clearLine()
-		print("clear_get_input")
-	end
-	term.setCursorPos(1,h/2)
-end
-
 function display_information()
 	while true do
-		clear_information()
-		print("set pressure: " .. tostring(PRESSURE))
-		print("current pressure: " .. tostring(get_current_pressure()))
+		monitor.setTextScale(1)
+		clear_monitor()
+		monitor.write("set pressure: " .. tostring(PRESSURE))
+		monitor.setCursorPos(1,3)
+		monitor.write("current")
+		monitor.setCursorPos(1,4)
+		monitor.write("pressure: " .. tostring(get_current_pressure()))
 		if get_current_pressure() < PRESSURE - 0.5 then
 			redstone.setOutput(COMPRESSOR_SIDE, true)
 		else
@@ -115,7 +105,7 @@ end
 
 function get_input()
 	while true do
-		clear_get_input()
+		clear()
 		print("enter command: ")
 		term.setCursorBlink(true)
 		input = read()
@@ -140,6 +130,9 @@ function get_input()
 		elseif input == "set gauge distance" then
 			GAUGE_DISTANCE = tonumber(read())
 			save_data()
+		elseif input == "set monitor side" then
+			MONITOR_SIDE = read()
+			save_data()
 		elseif input == "reset" then
 			fs.delete(DATA_PATH)
 			os.shutdown()
@@ -147,19 +140,25 @@ function get_input()
 			print("unknown command")
 			sleep(1)
 		end
-		clear_get_input()
+		clear()
 	end
 end
 
 redstone.setAnalogOutput(DUCT_SIDE, get_duct_strength())
 
-parallel.waitForAny(display_information(), get_input())
+parallel.waitForAny(display_information, get_input)
 
 
 
 
 
+--[[
 
+TODO
+
+show display_information() on another monitor
+
+--]]
 
 
 
